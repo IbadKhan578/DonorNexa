@@ -1,0 +1,81 @@
+import re
+
+# Blood groups
+BLOOD_GROUPS = ["O-", "O+", "A-", "A+", "B-", "B+", "AB-", "AB+"]
+
+# Roles
+ROLE_DONOR = "donor"
+ROLE_HOSPITAL = "hospital"
+ROLE_ADMIN = "admin"
+ROLES = [ROLE_DONOR, ROLE_HOSPITAL, ROLE_ADMIN]
+
+# User status
+USER_STATUS_ACTIVE = "active"
+USER_STATUS_BLOCKED = "blocked"
+USER_STATUS_PENDING = "pending"
+USER_STATUSES = [USER_STATUS_ACTIVE, USER_STATUS_BLOCKED, USER_STATUS_PENDING]
+
+# Hospital verification status
+HOSPITAL_STATUS_PENDING = "pending"
+HOSPITAL_STATUS_VERIFIED = "verified"
+HOSPITAL_STATUS_REJECTED = "rejected"
+HOSPITAL_STATUSES = [HOSPITAL_STATUS_PENDING, HOSPITAL_STATUS_VERIFIED, HOSPITAL_STATUS_REJECTED]
+
+# Blood request urgency
+URGENCY_CRITICAL = "critical"
+URGENCY_URGENT = "urgent"
+URGENCY_NORMAL = "normal"
+URGENCIES = [URGENCY_CRITICAL, URGENCY_URGENT, URGENCY_NORMAL]
+
+# Blood request status
+REQUEST_STATUS_OPEN = "open"
+REQUEST_STATUS_FULFILLED = "fulfilled"
+REQUEST_STATUS_EXPIRED = "expired"
+REQUEST_STATUS_CANCELLED = "cancelled"
+REQUEST_STATUSES = [REQUEST_STATUS_OPEN, REQUEST_STATUS_FULFILLED, REQUEST_STATUS_EXPIRED, REQUEST_STATUS_CANCELLED]
+
+# Match status
+MATCH_STATUS_NOTIFIED = "notified"
+MATCH_STATUS_ACCEPTED = "accepted"
+MATCH_STATUS_DECLINED = "declined"
+MATCH_STATUS_NO_RESPONSE = "no_response"
+MATCH_STATUS_COMPLETED = "completed"
+MATCH_STATUSES = [MATCH_STATUS_NOTIFIED, MATCH_STATUS_ACCEPTED, MATCH_STATUS_DECLINED, MATCH_STATUS_NO_RESPONSE, MATCH_STATUS_COMPLETED]
+
+# Validation patterns
+CNIC_REGEX = r"^\d{5}-\d{7}-\d{1}$"
+MOBILE_REGEX = r"^03\d{2}-\d{7}$"
+CNIC_PATTERN = re.compile(CNIC_REGEX)
+MOBILE_PATTERN = re.compile(MOBILE_REGEX)
+
+# Donor limits
+MIN_DONOR_AGE = 18
+MAX_DONOR_AGE = 60
+MIN_DONOR_WEIGHT = 50.0
+DEFAULT_COOLDOWN_DAYS = 90
+
+# Hospital limits
+MAX_OPEN_CRITICAL_PER_HOSPITAL = 3
+INITIAL_TRUST_SCORE = 100
+CANCELLATION_PENALTY_WITH_ACCEPTS = 10
+
+# Ranking weights & bonuses
+EXACT_MATCH_BONUS = 40.0
+COMPATIBLE_MATCH_BONUS = 20.0
+SAME_CITY_BONUS = 25.0
+MAX_RECOVERY_SCORE = 20.0
+MAX_RESPONSE_RATE_SCORE = 15.0
+RECOVERY_CAP_DAYS = 180
+
+# ABO/Rh compatibility matrix: Recipient -> List of compatible donor groups
+# Exact match is donor_group == recipient_group
+BLOOD_COMPATIBILITY_MAP = {
+    "O-": ["O-"],
+    "O+": ["O-", "O+"],
+    "A-": ["O-", "A-"],
+    "A+": ["O-", "O+", "A-", "A+"],
+    "B-": ["O-", "B-"],
+    "B+": ["O-", "O+", "B-", "B+"],
+    "AB-": ["O-", "A-", "B-", "AB-"],
+    "AB+": ["O-", "O+", "A-", "A+", "B-", "B+", "AB-", "AB+"],
+}
