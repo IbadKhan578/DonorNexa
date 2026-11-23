@@ -28,6 +28,7 @@ export default function HospitalRegisterPage() {
     password: '',
     hospital_name: '',
     registration_number: '',
+    cnic: '',
     focal_person_name: '',
     focal_person_phone: '',
     city_id: 11,
@@ -51,6 +52,17 @@ export default function HospitalRegisterPage() {
   const handleChange = (e) => {
     const { name, value } = e.target;
     setForm((prev) => ({ ...prev, [name]: value }));
+  };
+
+  const handleCnicChange = (e) => {
+    const raw = e.target.value.replace(/\D/g, '').slice(0, 13);
+    let formatted = raw;
+    if (raw.length > 5 && raw.length <= 12) {
+      formatted = `${raw.slice(0, 5)}-${raw.slice(5)}`;
+    } else if (raw.length > 12) {
+      formatted = `${raw.slice(0, 5)}-${raw.slice(5, 12)}-${raw.slice(12, 13)}`;
+    }
+    setForm((prev) => ({ ...prev, cnic: formatted }));
   };
 
   const handlePhoneChange = (e) => {
@@ -77,6 +89,12 @@ export default function HospitalRegisterPage() {
     e.preventDefault();
     setError('');
 
+    const cnicRegex = /^\d{5}-\d{7}-\d{1}$/;
+    if (!cnicRegex.test(form.cnic)) {
+      setError('Representative CNIC must follow format: 42101-1234567-1');
+      return;
+    }
+
     const phoneRegex = /^03\d{2}-\d{7}$/;
     if (!phoneRegex.test(form.focal_person_phone)) {
       setError('Focal person phone number must follow Pakistan format: 0300-1234567');
@@ -94,11 +112,15 @@ export default function HospitalRegisterPage() {
       data.append('email', form.email);
       data.append('password', form.password);
       data.append('hospital_name', form.hospital_name);
+      data.append('cnic', form.cnic);
+      data.append('phone', form.focal_person_phone);
+      data.append('focal_person_phone', form.focal_person_phone);
+      data.append('licence_no', form.registration_number);
       data.append('registration_number', form.registration_number);
       data.append('focal_person_name', form.focal_person_name);
-      data.append('focal_person_phone', form.focal_person_phone);
       data.append('city_id', form.city_id);
       data.append('address', form.address);
+      data.append('licence_file', licenseFile);
       data.append('license_doc', licenseFile);
 
       await api.post('/auth/register/hospital', data, {
@@ -108,7 +130,11 @@ export default function HospitalRegisterPage() {
       setSuccess(true);
     } catch (err) {
       console.error(err);
-      setError(err.response?.data?.detail || 'Hospital registration failed. Please try again.');
+      const detail = err.response?.data?.detail;
+      const msg = Array.isArray(detail)
+        ? detail.map((d) => d.msg || `${d.loc?.[1] || 'Field'} is invalid`).join('. ')
+        : (typeof detail === 'string' ? detail : 'Hospital registration failed. Please try again.');
+      setError(msg);
     } finally {
       setLoading(false);
     }
@@ -225,7 +251,7 @@ export default function HospitalRegisterPage() {
               </div>
             </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
               <div>
                 <label className="block text-xs font-mono font-medium text-sand-700 uppercase mb-1">
                   Focal Person Name *
@@ -258,6 +284,26 @@ export default function HospitalRegisterPage() {
                 />
                 <span className="text-[10px] text-sand-500 font-mono mt-0.5 block">
                   Auto-formats as 03XX-XXXXXXX
+                </span>
+              </div>
+
+              <div>
+                <label className="block text-xs font-mono font-medium text-sand-700 uppercase mb-1">
+                  Representative CNIC *
+                </label>
+                <input
+                  type="text"
+                  required
+                  name="cnic"
+                  inputMode="numeric"
+                  maxLength={15}
+                  value={form.cnic}
+                  onChange={handleCnicChange}
+                  placeholder="42101-1234567-1"
+                  className="input-field text-sm font-mono"
+                />
+                <span className="text-[10px] text-sand-500 font-mono mt-0.5 block">
+                  Auto-formats as #####-#######-#
                 </span>
               </div>
             </div>

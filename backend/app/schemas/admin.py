@@ -1,6 +1,6 @@
 from typing import Optional, List, Dict, Any
 from datetime import datetime
-from pydantic import BaseModel, field_validator
+from pydantic import BaseModel, field_validator, ConfigDict
 
 class AdminAnalyticsOut(BaseModel):
     requests_this_week: int
@@ -63,14 +63,13 @@ class CityUpdateRequest(BaseModel):
     province: Optional[str] = None
 
 class CityOut(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
     id: int
     city_name: str
     province: str
     donors_count: int = 0
     hospitals_count: int = 0
-
-    class Config:
-        from_attributes = True
 
 class AuditLogOut(BaseModel):
     id: int

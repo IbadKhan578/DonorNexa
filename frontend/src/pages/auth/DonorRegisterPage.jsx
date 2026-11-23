@@ -105,9 +105,18 @@ export default function DonorRegisterPage() {
     try {
       setLoading(true);
       await api.post('/auth/register/donor', {
-        ...form,
-        city_id: parseInt(form.city_id, 10),
+        name: form.full_name,
+        full_name: form.full_name,
+        email: form.email,
+        password: form.password,
+        cnic: form.cnic,
+        phone: form.phone,
+        blood_group: form.blood_group,
+        dob: form.date_of_birth,
+        date_of_birth: form.date_of_birth,
+        weight: parseFloat(form.weight_kg),
         weight_kg: parseFloat(form.weight_kg),
+        city_id: parseInt(form.city_id, 10),
       });
 
       // Automatically sign in upon registration
@@ -115,7 +124,11 @@ export default function DonorRegisterPage() {
       navigate('/donor/dashboard');
     } catch (err) {
       console.error(err);
-      setError(err.response?.data?.detail || 'Registration failed. Please check your information.');
+      const detail = err.response?.data?.detail;
+      const msg = Array.isArray(detail)
+        ? detail.map((d) => d.msg || `${d.loc?.[1] || 'Field'} is invalid`).join('. ')
+        : (typeof detail === 'string' ? detail : 'Registration failed. Please check your information.');
+      setError(msg);
     } finally {
       setLoading(false);
     }

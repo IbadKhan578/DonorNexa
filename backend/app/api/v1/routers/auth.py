@@ -140,10 +140,13 @@ async def register_hospital(
     email: str = Form(...),
     password: str = Form(...),
     cnic: str = Form(...),
-    phone: str = Form(...),
-    licence_no: str = Form(...),
+    phone: Optional[str] = Form(None),
+    focal_person_phone: Optional[str] = Form(None),
+    licence_no: Optional[str] = Form(None),
+    registration_number: Optional[str] = Form(None),
     city_id: int = Form(...),
-    licence_file: UploadFile = File(...),
+    licence_file: Optional[UploadFile] = File(None),
+    license_doc: Optional[UploadFile] = File(None),
     db: AsyncSession = Depends(get_db)
 ):
     """
@@ -152,23 +155,34 @@ async def register_hospital(
     """
     client_ip = get_client_ip(request)
 
+    actual_phone = (phone or focal_person_phone or "").strip()
+    actual_licence_no = (licence_no or registration_number or "").strip()
+    actual_file = licence_file or license_doc
+
+    if not actual_phone:
+        raise HTTPException(status_code=400, detail="Mobile phone number is required.")
+    if not actual_licence_no:
+        raise HTTPException(status_code=400, detail="Hospital medical licence number is required.")
+    if not actual_file:
+        raise HTTPException(status_code=400, detail="Medical licence document file is required.")
+
     # Validate regex
     if not CNIC_PATTERN.match(cnic.strip()):
         raise HTTPException(status_code=400, detail="CNIC must follow format #####-#######-#")
-    if not MOBILE_PATTERN.match(phone.strip()):
+    if not MOBILE_PATTERN.match(actual_phone):
         raise HTTPException(status_code=400, detail="Mobile number must follow format 03XX-XXXXXXX")
 
     # 1. Check existing email or CNIC
-    stmt = select(User).where((User.email == email) | (User.cnic == cnic))
+    stmt = select(User).where((User.email == email.strip().lower()) | (User.cnic == cnic.strip()))
     existing_user = (await db.execute(stmt)).scalar_one_or_none()
     if existing_user:
-        if existing_user.email == email:
+        if existing_user.email == email.strip().lower():
             raise HTTPException(status_code=400, detail="Email is already registered.")
         else:
             raise HTTPException(status_code=400, detail="Representative CNIC is already registered.")
 
     # 2. Check licence number
-    lic_stmt = select(Hospital).where(Hospital.licence_no == licence_no.strip())
+    lic_stmt = select(Hospital).where(Hospital.licence_no == actual_licence_no)
     if (await db.execute(lic_stmt)).scalar_one_or_none():
         raise HTTPException(status_code=400, detail="Hospital licence number is already registered.")
 
@@ -179,7 +193,7 @@ async def register_hospital(
         raise HTTPException(status_code=400, detail="Selected city is not supported.")
 
     # 4. Save and validate medical licence PDF
-    licence_file_path = await validate_and_save_licence_pdf(licence_file)
+    licence_file_path = await validate_and_save_licence_pdf(actual_file)
 
     # 5. Create User
     new_user = User(
@@ -198,7 +212,7 @@ async def register_hospital(
     new_hospital = Hospital(
         user_id=new_user.id,
         hospital_name=hospital_name.strip(),
-        licence_no=licence_no.strip(),
+        licence_no=actual_licence_no,
         licence_file_path=licence_file_path,
         city_id=city_id,
         verification_status=HOSPITAL_STATUS_PENDING,
@@ -212,7 +226,7 @@ async def register_hospital(
         user_id=new_user.id,
         action="Registered",
         entity=f"hospital #{new_user.id}",
-        new_value=f"licence={licence_no}, city={city_obj.city_name}, status=pending",
+        new_value=f"licence={actual_licence_no}, city={city_obj.city_name}, status=pending",
         ip_address=client_ip
     )
 

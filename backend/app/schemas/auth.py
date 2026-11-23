@@ -1,6 +1,6 @@
 from typing import Optional
 from datetime import date, datetime
-from pydantic import BaseModel, EmailStr, field_validator
+from pydantic import BaseModel, EmailStr, field_validator, model_validator, ConfigDict
 from app.core.constants import (
     BLOOD_GROUPS, CNIC_PATTERN, MOBILE_PATTERN,
     MIN_DONOR_WEIGHT, MIN_DONOR_AGE, MAX_DONOR_AGE
@@ -17,6 +17,18 @@ class DonorRegisterRequest(BaseModel):
     weight: float
     blood_group: str
     city_id: int
+
+    @model_validator(mode="before")
+    @classmethod
+    def remap_legacy_fields(cls, data):
+        if isinstance(data, dict):
+            if "full_name" in data and "name" not in data:
+                data["name"] = data["full_name"]
+            if "date_of_birth" in data and "dob" not in data:
+                data["dob"] = data["date_of_birth"]
+            if "weight_kg" in data and "weight" not in data:
+                data["weight"] = data["weight_kg"]
+        return data
 
     @field_validator("cnic")
     @classmethod
@@ -89,6 +101,8 @@ class LoginRequest(BaseModel):
     password: str
 
 class UserOut(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
     id: int
     name: str
     email: str
@@ -96,9 +110,6 @@ class UserOut(BaseModel):
     role: str
     status: str
     created_at: datetime
-
-    class Config:
-        from_attributes = True
 
 class TokenResponse(BaseModel):
     access_token: str
