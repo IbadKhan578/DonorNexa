@@ -41,9 +41,7 @@ export default function LoginPage() {
     <div className="min-h-screen bg-sand-50 flex flex-col justify-center py-12 sm:px-6 lg:px-8 font-sans">
       <div className="sm:mx-auto sm:w-full sm:max-w-md">
         <div className="flex justify-center mb-2">
-          <Link to="/">
-            <Logo size="lg" />
-          </Link>
+          <Logo size="lg" />
         </div>
         <h2 className="mt-4 text-center text-2xl font-serif font-bold text-sand-900">
           Sign In to DonorNexa

@@ -38,7 +38,7 @@ export default function HospitalRegisterPage() {
   useEffect(() => {
     api.get('/public/cities')
       .then((res) => {
-        if (res.data && res.data.length > 0) {
+        if (Array.isArray(res.data) && res.data.length > 0) {
           setCities(res.data);
           setForm((prev) => ({ ...prev, city_id: prev.city_id || res.data[0].id }));
         }
@@ -143,7 +143,7 @@ export default function HospitalRegisterPage() {
       <div className="max-w-2xl mx-auto">
         <div className="text-center mb-8">
           <div className="flex justify-center mb-3">
-            <Link to="/"><Logo size="lg" /></Link>
+            <Logo size="lg" />
           </div>
           <h1 className="text-2xl sm:text-3xl font-serif font-bold text-sand-900">
             Register a Hospital or Healthcare Facility
@@ -273,8 +273,8 @@ export default function HospitalRegisterPage() {
                   onChange={handleChange}
                   className="input-field text-sm"
                 >
-                  {cities.map((c) => (
-                    <option key={c.id} value={c.id}>{c.name} ({c.province})</option>
+                  {(Array.isArray(cities) ? cities : DEFAULT_CITIES).map((c) => (
+                    <option key={c.id} value={c.id}>{c.name || c.city_name} ({c.province})</option>
                   ))}
                 </select>
               </div>
