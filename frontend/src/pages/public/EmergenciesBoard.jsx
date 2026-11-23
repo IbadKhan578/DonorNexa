@@ -26,7 +26,7 @@ export default function EmergenciesBoard() {
   const fetchCities = async () => {
     try {
       const res = await api.get('/public/cities');
-      setCities(res.data || []);
+      setCities(Array.isArray(res.data) ? res.data : []);
     } catch (err) {
       console.error('Failed to load cities:', err);
     }
@@ -41,7 +41,7 @@ export default function EmergenciesBoard() {
       if (selectedUrgency !== 'ALL') params.urgency = selectedUrgency.toLowerCase();
 
       const res = await api.get('/public/emergencies', { params });
-      setEmergencies(res.data || []);
+      setEmergencies(Array.isArray(res.data) ? res.data : []);
     } catch (err) {
       console.error('Failed to fetch emergencies:', err);
     } finally {

@@ -24,8 +24,12 @@ export default function LandingPage() {
           api.get('/public/stats'),
           api.get('/public/emergencies')
         ]);
-        if (statsRes.data) setStats(statsRes.data);
-        if (emergRes.data) setEmergencies(emergRes.data.slice(0, 3));
+        if (statsRes.data && typeof statsRes.data === 'object' && !Array.isArray(statsRes.data)) {
+          setStats(statsRes.data);
+        }
+        if (Array.isArray(emergRes.data)) {
+          setEmergencies(emergRes.data.slice(0, 3));
+        }
       } catch (err) {
         console.error('Error fetching landing page data:', err);
       } finally {

@@ -55,14 +55,15 @@ const processQueue = (error, token = null) => {
 api.interceptors.response.use(
   (response) => response,
   async (error) => {
-    const originalRequest = error.config;
+    const originalRequest = error?.config;
 
     // Do not attempt refresh on auth endpoints themselves
     if (
-      error.response?.status === 401 &&
+      error?.response?.status === 401 &&
+      originalRequest &&
       !originalRequest._retry &&
-      !originalRequest.url.includes('/auth/login') &&
-      !originalRequest.url.includes('/auth/refresh')
+      !originalRequest.url?.includes('/auth/login') &&
+      !originalRequest.url?.includes('/auth/refresh')
     ) {
       if (isRefreshing) {
         return new Promise((resolve, reject) => {
