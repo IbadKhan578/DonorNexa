@@ -2,7 +2,7 @@ import os
 import json
 from typing import List, Union
 from pydantic_settings import BaseSettings, SettingsConfigDict
-from pydantic import field_validator
+from pydantic import field_validator, model_validator
 
 class Settings(BaseSettings):
     PROJECT_NAME: str = "DonorNexa"
@@ -37,6 +37,30 @@ class Settings(BaseSettings):
             except Exception:
                 return [v]
         return v
+
+    @model_validator(mode="after")
+    def normalize_database_urls(self):
+        # Automatically ensure asyncpg driver for async SQLAlchemy
+        db_url = self.DATABASE_URL.strip()
+        if db_url.startswith("postgres://"):
+            self.DATABASE_URL = db_url.replace("postgres://", "postgresql+asyncpg://", 1)
+        elif db_url.startswith("postgresql://"):
+            self.DATABASE_URL = db_url.replace("postgresql://", "postgresql+asyncpg://", 1)
+        elif db_url.startswith("postgresql+psycopg://"):
+            self.DATABASE_URL = db_url.replace("postgresql+psycopg://", "postgresql+asyncpg://", 1)
+
+        # Derive SYNC_DATABASE_URL if not explicitly customized for remote DB
+        sync_url = self.SYNC_DATABASE_URL.strip()
+        if ("localhost:5432" in sync_url and "localhost:5432" not in self.DATABASE_URL) or not sync_url:
+            self.SYNC_DATABASE_URL = self.DATABASE_URL.replace("postgresql+asyncpg://", "postgresql+psycopg://", 1)
+        elif sync_url.startswith("postgres://"):
+            self.SYNC_DATABASE_URL = sync_url.replace("postgres://", "postgresql+psycopg://", 1)
+        elif sync_url.startswith("postgresql://"):
+            self.SYNC_DATABASE_URL = sync_url.replace("postgresql://", "postgresql+psycopg://", 1)
+        elif sync_url.startswith("postgresql+asyncpg://"):
+            self.SYNC_DATABASE_URL = sync_url.replace("postgresql+asyncpg://", "postgresql+psycopg://", 1)
+
+        return self
 
     model_config = SettingsConfigDict(
         env_file=".env",
